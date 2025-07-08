@@ -1,0 +1,6 @@
+services:
+  backend:
+    build: ./services/backend
+    volumes:
+      - ./backend:/workspace/backend
+    command: sleep infinity
