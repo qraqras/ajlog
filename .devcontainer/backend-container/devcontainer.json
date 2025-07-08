@@ -4,7 +4,7 @@
         "../../docker-compose.yml"
     ],
     "service": "backend",
-    "shutdownAction": "none",
+    "shutdownAction": "stopCompose",
     "workspaceFolder": "/workspace/backend",
     "customizations": {
         "vscode": {
