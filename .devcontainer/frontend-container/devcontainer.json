@@ -1,0 +1,17 @@
+{
+    "name": "Frontend Container",
+    "dockerComposeFile": [
+        "../../docker-compose.yml"
+    ],
+    "service": "frontend",
+    "shutdownAction": "stopCompose",
+    "workspaceFolder": "/workspace/frontend",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "biomejs.biome"
+            ]
+        }
+    }
+}

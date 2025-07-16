@@ -6,3 +6,10 @@ services:
     volumes:
       - ./backend:/workspace/backend
     command: sleep infinity
+  frontend:
+    build: ./services/frontend
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend:/workspace/frontend
+    command: sleep infinity
