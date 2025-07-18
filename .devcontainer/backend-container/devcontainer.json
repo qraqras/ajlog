@@ -9,10 +9,22 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-python.python",
+                "charliermarsh.ruff",
                 "ms-python.debugpy",
-                "charliermarsh.ruff"
-            ]
+                "ms-python.python",
+                "ms-python.mypy-type-checker"
+            ],
+            "settings": {
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll": "explicit",
+                        "source.organizeImports": "explicit"
+                    }
+                },
+                "ruff.enableExperimentalFormatter": true
+            }
         }
     }
 }
