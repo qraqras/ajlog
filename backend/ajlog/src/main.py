@@ -1,16 +1,11 @@
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from typing import Annotated, Sequence
 
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Session, SQLModel, create_engine, select
 
-from typing import Annotated
-
-from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlmodel import Field, Session, SQLModel, create_engine, select
-
-
-class Sample(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-
+from .models import ScrumTeam
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -28,14 +23,23 @@ def get_session():
         yield session
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+    pass
+
+
 SessionDep = Annotated[Session, Depends(get_session)]
 
-app = FastAPI()
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -43,21 +47,27 @@ async def root():
     return {"message": "Hello World"}
 
 
-# https://fastapi.tiangolo.com/tutorial/sql-databases/?h=sqlite#create-an-engine
-@app.get("/sample1/")
-def create_hero(session: SessionDep) -> Sample:
-    sample = Sample(name="name")
-    session.add(sample)
+@app.get("/scrum_teams/")
+def read_scrum_teams(session: SessionDep) -> Sequence[ScrumTeam]:
+    """Read Scrum Teams."""
+    scrum_teams = session.exec(select(ScrumTeam)).all()
+    return scrum_teams
+
+
+@app.get("/test/")
+def create_scrum_team_test(session: SessionDep) -> ScrumTeam:
+    """Test."""
+    scrum_team = ScrumTeam(name="Test Team")
+    session.add(scrum_team)
     session.commit()
-    session.refresh(sample)
-    return sample
+    session.refresh(scrum_team)
+    return scrum_team
 
 
-@app.get("/sample2/")
-def read_heroes(
-    session: SessionDep,
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
-) -> list[Sample]:
-    heroes = session.exec(select(Sample).offset(offset).limit(limit)).all()
-    return heroes
+@app.post("/scrum_team/")
+def create_scrum_team(scrum_team: ScrumTeam, session: SessionDep) -> ScrumTeam:
+    """Create a new Scrum Team."""
+    session.add(scrum_team)
+    session.commit()
+    session.refresh(scrum_team)
+    return scrum_team
