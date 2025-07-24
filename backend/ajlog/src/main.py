@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Annotated, Sequence
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, SQLModel, create_engine, select
 
@@ -54,20 +54,30 @@ def read_scrum_teams(session: SessionDep) -> Sequence[ScrumTeam]:
     return scrum_teams
 
 
-@app.get("/test/")
-def create_scrum_team_test(session: SessionDep) -> ScrumTeam:
-    """Test."""
-    scrum_team = ScrumTeam(name="Test Team")
-    session.add(scrum_team)
-    session.commit()
-    session.refresh(scrum_team)
+@app.get("/scrum_teams/{scrum_team_id}")
+def read_scrum_team(scrum_team_id: int, session: SessionDep) -> ScrumTeam:
+    """Read a Scrum Team."""
+    scrum_team = session.get(ScrumTeam, scrum_team_id)
+    if not scrum_team:
+        raise HTTPException(status_code=404, detail="Scrum Team not found")
     return scrum_team
 
 
-@app.post("/scrum_team/")
+@app.post("/scrum_teams/")
 def create_scrum_team(scrum_team: ScrumTeam, session: SessionDep) -> ScrumTeam:
-    """Create a new Scrum Team."""
+    """Create a Scrum Team."""
     session.add(scrum_team)
     session.commit()
     session.refresh(scrum_team)
     return scrum_team
+
+
+@app.delete("/scrum_teams/{scrum_team_id}")
+def delete_scrum_team(scrum_team_id: int, session: SessionDep) -> dict[str, bool]:
+    """Delete a Scrum Team."""
+    scrum_team = session.get(ScrumTeam, scrum_team_id)
+    if not scrum_team:
+        raise HTTPException(status_code=404, detail="Scrum Team not found")
+    session.delete(scrum_team)
+    session.commit()
+    return {"ok": True}
