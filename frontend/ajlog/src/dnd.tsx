@@ -1,6 +1,6 @@
 // https://docs.dndkit.com/presets/sortable
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -20,13 +20,20 @@ import {
 
 
 export function Dnd() {
-    const [items, setItems] = useState([1, 2, 3]);
+    const [items, setItems] = useState([]);
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
+
+    useEffect(() => {
+        fetch('http://localhost:8080/scrum_teams/')
+            .then(response => response.json())
+            .then(data => setItems(data))
+            .catch(error => console.error("Fetching data failed", error));
+    }, []);
 
     return (
         <DndContext
@@ -38,19 +45,17 @@ export function Dnd() {
                 items={items}
                 strategy={verticalListSortingStrategy}
             >
-                {items.map(id => <SortableItem key={id} id={id} />)}
+                {items.map(item => <SortableItem key={item.id} id={item.id} name={item.name} />)}
             </SortableContext>
         </DndContext>
     );
 
     function handleDragEnd(event) {
         const { active, over } = event;
-
         if (active.id !== over.id) {
             setItems((items) => {
-                const oldIndex = items.indexOf(active.id);
-                const newIndex = items.indexOf(over.id);
-
+                const oldIndex = items.findIndex(item => item.id === active.id);
+                const newIndex = items.findIndex(item => item.id === over.id);
                 return arrayMove(items, oldIndex, newIndex);
             });
         }
@@ -74,7 +79,7 @@ export function SortableItem(props) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            {props.id}
+            #{props.id}, {props.name}
         </div>
     );
 }
