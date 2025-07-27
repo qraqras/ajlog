@@ -3,9 +3,9 @@ from typing import Annotated, Sequence
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel import Session, SQLModel, col, create_engine, select
 
-from .models import ScrumTeam
+from .models import ScrumTeam, ScrumTeamOrder
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -52,6 +52,17 @@ def read_scrum_teams(session: SessionDep) -> Sequence[ScrumTeam]:
     """Read Scrum Teams."""
     scrum_teams = session.exec(select(ScrumTeam)).all()
     return scrum_teams
+
+
+@app.get("/scrum_teams/order/")
+def read_scrum_team_order(session: SessionDep):
+    """Read Scrum Teams with order."""
+    result = session.exec(
+        select(ScrumTeam, ScrumTeamOrder)
+        .join(ScrumTeamOrder, isouter=True)
+        .order_by(col(ScrumTeamOrder.order))
+    )
+    return [record[0] for record in result]
 
 
 @app.get("/scrum_teams/{scrum_team_id}")
