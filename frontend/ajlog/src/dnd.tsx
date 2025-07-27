@@ -29,7 +29,7 @@ export function Dnd() {
     );
 
     useEffect(() => {
-        fetch('http://localhost:8080/scrum_teams/')
+        fetch('http://localhost:8080/scrum_teams/order/')
             .then(response => response.json())
             .then(data => setItems(data))
             .catch(error => console.error("Fetching data failed", error));
@@ -56,7 +56,23 @@ export function Dnd() {
             setItems((items) => {
                 const oldIndex = items.findIndex(item => item.id === active.id);
                 const newIndex = items.findIndex(item => item.id === over.id);
-                return arrayMove(items, oldIndex, newIndex);
+                items = arrayMove(items, oldIndex, newIndex);
+                const orders = [];
+                items.forEach((item, index) => {
+                    orders.push({
+                        scrum_team_id: item.id,
+                        order: index,
+                    });
+                });
+                fetch('http://localhost:8080/scrum_teams/order/',
+                    {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orders),
+                    })
+                    .then(response => response.json())
+                    .catch(error => console.error("Fetching data failed", error));
+                return items;
             });
         }
     }
