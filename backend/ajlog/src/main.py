@@ -54,17 +54,6 @@ def read_scrum_teams(session: SessionDep) -> Sequence[ScrumTeam]:
     return scrum_teams
 
 
-@app.get("/scrum_teams/order/")
-def read_scrum_team_order(session: SessionDep):
-    """Read Scrum Teams with order."""
-    result = session.exec(
-        select(ScrumTeam, ScrumTeamOrder)
-        .join(ScrumTeamOrder, isouter=True)
-        .order_by(col(ScrumTeamOrder.order))
-    )
-    return [record[0] for record in result]
-
-
 @app.get("/scrum_teams/{scrum_team_id}")
 def read_scrum_team(scrum_team_id: int, session: SessionDep) -> ScrumTeam:
     """Read a Scrum Team."""
@@ -92,3 +81,29 @@ def delete_scrum_team(scrum_team_id: int, session: SessionDep) -> dict[str, bool
     session.delete(scrum_team)
     session.commit()
     return {"ok": True}
+
+
+@app.get("/scrum_teams/order/")
+def read_scrum_team_order(session: SessionDep) -> Sequence[ScrumTeam]:
+    """Read Scrum Teams with order."""
+    result = session.exec(
+        select(ScrumTeam, ScrumTeamOrder)
+        .join(ScrumTeamOrder, isouter=True)
+        .order_by(col(ScrumTeamOrder.order))
+    )
+    return [record[0] for record in result]
+
+
+@app.put("/scrum_teams/order/")
+def update_scrum_team_order(
+    scrum_team_orders: Sequence[ScrumTeamOrder], session: SessionDep
+) -> Sequence[ScrumTeamOrder]:
+    """Update the order of Scrum Teams."""
+    for order in scrum_team_orders:
+        existing_order = session.get(ScrumTeamOrder, order.scrum_team_id)
+        if existing_order:
+            existing_order.order = order.order
+        else:
+            session.add(order)
+    session.commit()
+    return scrum_team_orders
