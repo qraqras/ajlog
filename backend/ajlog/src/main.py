@@ -90,7 +90,7 @@ def read_scrum_team_order(session: SessionDep) -> Sequence[ScrumTeam]:
         .join(ScrumTeamOrder, isouter=True)
         .order_by(col(ScrumTeamOrder.order))
     )
-    return [record[0] for record in result]
+    return [scrum_team for scrum_team, _ in result]
 
 
 @app.put("/scrum_teams/order/")
