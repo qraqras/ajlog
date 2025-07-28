@@ -36,18 +36,21 @@ export function Dnd() {
     }, []);
 
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext
-                items={items}
-                strategy={verticalListSortingStrategy}
+        <>
+            <CreateScrumTeam></CreateScrumTeam>
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
             >
-                {items.map(item => <SortableItem key={item.id} id={item.id} name={item.name} />)}
-            </SortableContext>
-        </DndContext>
+                <SortableContext
+                    items={items}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {items.map(item => <SortableItem key={item.id} id={item.id} name={item.name} />)}
+                </SortableContext>
+            </DndContext>
+        </>
     );
 
     function handleDragEnd(event) {
@@ -94,8 +97,65 @@ export function SortableItem(props) {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            #{props.id}, {props.name}
+        <div ref={setNodeRef} style={style} {...attributes}>
+            <span {...listeners}>#{props.id}, {props.name}</span>
+            <DeleteScrumTeam teamId={props.id} />
         </div>
+    );
+}
+
+export function CreateScrumTeam() {
+    const [name, setName] = useState('');
+
+    const handleSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
+        fetch('http://localhost:8080/scrum_teams/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Team created:", data);
+                setName('');
+            })
+            .catch(error => console.error("Creating team failed", error));
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Team Name"
+                required
+            />
+            <button type="submit">Create Team</button>
+        </form>
+    );
+}
+
+export function DeleteScrumTeam({ teamId }: { teamId: number }) {
+    const handleDelete = (event: React.MouseEvent) => {
+        event.stopPropagation(); // 追加
+        console.log("delete")
+        fetch(`http://localhost:8080/scrum_teams/${teamId}`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Team deleted successfully");
+                } else {
+                    console.error("Failed to delete team");
+                }
+            })
+            .catch(error => console.error("Deleting team failed", error));
+    };
+
+    return (
+        <button onClick={handleDelete}>
+            Delete Team
+        </button>
     );
 }
