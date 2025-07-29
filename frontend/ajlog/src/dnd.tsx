@@ -51,7 +51,7 @@ export function Dnd() {
                     items={items}
                     strategy={verticalListSortingStrategy}
                 >
-                    {items.map(item => <SortableItem key={item.id} id={item.id} name={item.name} />)}
+                    {items.map(item => <SortableItem onDeleted={reloadItems} key={item.id} id={item.id} name={item.name} />)}
                 </SortableContext>
             </DndContext>
         </>
@@ -86,14 +86,14 @@ export function Dnd() {
 }
 
 
-export function SortableItem(props) {
+export function SortableItem({ onDeleted, key, id, name }: { onDeleted?: () => void; key: number, id: number, name: string }) {
     const {
         attributes,
         listeners,
         setNodeRef,
         transform,
         transition,
-    } = useSortable({ id: props.id });
+    } = useSortable({ id: id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -102,8 +102,8 @@ export function SortableItem(props) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes}>
-            <span {...listeners}>#{props.id}, {props.name}</span>
-            <DeleteScrumTeam teamId={props.id} />
+            <span {...listeners}>#{id}, {name}</span>
+            <DeleteScrumTeam onDeleted={onDeleted} teamId={id} />
         </div>
     );
 }
@@ -140,7 +140,7 @@ export function CreateScrumTeam({ onCreated }: { onCreated?: () => void }) {
     );
 }
 
-export function DeleteScrumTeam({ teamId }: { teamId: number }) {
+export function DeleteScrumTeam({ onDeleted, teamId }: { onDeleted?: () => void; teamId: number }) {
     const handleDelete = (event: React.MouseEvent) => {
         event.stopPropagation(); // 追加
         console.log("delete")
@@ -153,6 +153,7 @@ export function DeleteScrumTeam({ teamId }: { teamId: number }) {
                 } else {
                     console.error("Failed to delete team");
                 }
+                if (onDeleted) onDeleted();
             })
             .catch(error => console.error("Deleting team failed", error));
     };
