@@ -28,16 +28,20 @@ export function Dnd() {
         })
     );
 
-    useEffect(() => {
+    const reloadItems = () => {
         fetch('http://localhost:8080/scrum_teams/order/')
             .then(response => response.json())
             .then(data => setItems(data))
             .catch(error => console.error("Fetching data failed", error));
+    }
+
+    useEffect(() => {
+        reloadItems();
     }, []);
 
     return (
         <>
-            <CreateScrumTeam></CreateScrumTeam>
+            <CreateScrumTeam onCreated={reloadItems} />
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -104,7 +108,7 @@ export function SortableItem(props) {
     );
 }
 
-export function CreateScrumTeam() {
+export function CreateScrumTeam({ onCreated }: { onCreated?: () => void }) {
     const [name, setName] = useState('');
 
     const handleSubmit = (event: React.FormEvent) => {
@@ -116,7 +120,7 @@ export function CreateScrumTeam() {
         })
             .then(response => response.json())
             .then(data => {
-                console.log("Team created:", data);
+                if (onCreated) onCreated();
                 setName('');
             })
             .catch(error => console.error("Creating team failed", error));
