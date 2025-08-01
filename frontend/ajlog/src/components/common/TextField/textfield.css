@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+.textfield {
+    @apply bg-pink-500
+}
